@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ExchangeClient interface {
 	ListExchanges(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ExchangeList, error)
+	GetUserPatrimony(ctx context.Context, in *ExchangeId, opts ...grpc.CallOption) (*UserPatrimony, error)
+	GetUserInvested(ctx context.Context, in *ExchangeId, opts ...grpc.CallOption) (*UserInvested, error)
 }
 
 type exchangeClient struct {
@@ -43,11 +45,31 @@ func (c *exchangeClient) ListExchanges(ctx context.Context, in *empty.Empty, opt
 	return out, nil
 }
 
+func (c *exchangeClient) GetUserPatrimony(ctx context.Context, in *ExchangeId, opts ...grpc.CallOption) (*UserPatrimony, error) {
+	out := new(UserPatrimony)
+	err := c.cc.Invoke(ctx, "/radhark.radwallet.Exchange/GetUserPatrimony", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *exchangeClient) GetUserInvested(ctx context.Context, in *ExchangeId, opts ...grpc.CallOption) (*UserInvested, error) {
+	out := new(UserInvested)
+	err := c.cc.Invoke(ctx, "/radhark.radwallet.Exchange/GetUserInvested", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ExchangeServer is the server API for Exchange service.
 // All implementations must embed UnimplementedExchangeServer
 // for forward compatibility
 type ExchangeServer interface {
 	ListExchanges(context.Context, *empty.Empty) (*ExchangeList, error)
+	GetUserPatrimony(context.Context, *ExchangeId) (*UserPatrimony, error)
+	GetUserInvested(context.Context, *ExchangeId) (*UserInvested, error)
 	mustEmbedUnimplementedExchangeServer()
 }
 
@@ -57,6 +79,12 @@ type UnimplementedExchangeServer struct {
 
 func (UnimplementedExchangeServer) ListExchanges(context.Context, *empty.Empty) (*ExchangeList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListExchanges not implemented")
+}
+func (UnimplementedExchangeServer) GetUserPatrimony(context.Context, *ExchangeId) (*UserPatrimony, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserPatrimony not implemented")
+}
+func (UnimplementedExchangeServer) GetUserInvested(context.Context, *ExchangeId) (*UserInvested, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserInvested not implemented")
 }
 func (UnimplementedExchangeServer) mustEmbedUnimplementedExchangeServer() {}
 
@@ -89,6 +117,42 @@ func _Exchange_ListExchanges_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Exchange_GetUserPatrimony_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExchangeId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExchangeServer).GetUserPatrimony(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/radhark.radwallet.Exchange/GetUserPatrimony",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExchangeServer).GetUserPatrimony(ctx, req.(*ExchangeId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Exchange_GetUserInvested_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExchangeId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExchangeServer).GetUserInvested(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/radhark.radwallet.Exchange/GetUserInvested",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExchangeServer).GetUserInvested(ctx, req.(*ExchangeId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Exchange_ServiceDesc is the grpc.ServiceDesc for Exchange service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -99,6 +163,14 @@ var Exchange_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListExchanges",
 			Handler:    _Exchange_ListExchanges_Handler,
+		},
+		{
+			MethodName: "GetUserPatrimony",
+			Handler:    _Exchange_GetUserPatrimony_Handler,
+		},
+		{
+			MethodName: "GetUserInvested",
+			Handler:    _Exchange_GetUserInvested_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
