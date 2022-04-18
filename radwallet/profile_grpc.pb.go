@@ -25,6 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ProfileClient interface {
 	UpdateProfile(ctx context.Context, in *ProfileUpdateRequest, opts ...grpc.CallOption) (*ProfileResponse, error)
 	GetProfile(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ProfileResponse, error)
+	GetProfileInternal(ctx context.Context, in *ExchangeDataRequest, opts ...grpc.CallOption) (*ExchangeUser, error)
 }
 
 type profileClient struct {
@@ -53,12 +54,22 @@ func (c *profileClient) GetProfile(ctx context.Context, in *empty.Empty, opts ..
 	return out, nil
 }
 
+func (c *profileClient) GetProfileInternal(ctx context.Context, in *ExchangeDataRequest, opts ...grpc.CallOption) (*ExchangeUser, error) {
+	out := new(ExchangeUser)
+	err := c.cc.Invoke(ctx, "/radhark.radwallet.Profile/GetProfileInternal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProfileServer is the server API for Profile service.
 // All implementations must embed UnimplementedProfileServer
 // for forward compatibility
 type ProfileServer interface {
 	UpdateProfile(context.Context, *ProfileUpdateRequest) (*ProfileResponse, error)
 	GetProfile(context.Context, *empty.Empty) (*ProfileResponse, error)
+	GetProfileInternal(context.Context, *ExchangeDataRequest) (*ExchangeUser, error)
 	mustEmbedUnimplementedProfileServer()
 }
 
@@ -71,6 +82,9 @@ func (UnimplementedProfileServer) UpdateProfile(context.Context, *ProfileUpdateR
 }
 func (UnimplementedProfileServer) GetProfile(context.Context, *empty.Empty) (*ProfileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProfile not implemented")
+}
+func (UnimplementedProfileServer) GetProfileInternal(context.Context, *ExchangeDataRequest) (*ExchangeUser, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProfileInternal not implemented")
 }
 func (UnimplementedProfileServer) mustEmbedUnimplementedProfileServer() {}
 
@@ -121,6 +135,24 @@ func _Profile_GetProfile_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Profile_GetProfileInternal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExchangeDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfileServer).GetProfileInternal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/radhark.radwallet.Profile/GetProfileInternal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfileServer).GetProfileInternal(ctx, req.(*ExchangeDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Profile_ServiceDesc is the grpc.ServiceDesc for Profile service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -135,6 +167,10 @@ var Profile_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetProfile",
 			Handler:    _Profile_GetProfile_Handler,
+		},
+		{
+			MethodName: "GetProfileInternal",
+			Handler:    _Profile_GetProfileInternal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
