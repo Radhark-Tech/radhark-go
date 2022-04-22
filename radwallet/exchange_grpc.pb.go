@@ -26,6 +26,7 @@ type ExchangeClient interface {
 	ListExchanges(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ExchangeList, error)
 	GetUserPatrimony(ctx context.Context, in *ExchangeId, opts ...grpc.CallOption) (*UserPatrimony, error)
 	GetUserInvested(ctx context.Context, in *ExchangeId, opts ...grpc.CallOption) (*UserInvested, error)
+	GetCoinDetail(ctx context.Context, in *CoinDetail, opts ...grpc.CallOption) (*CoinDetailResponse, error)
 }
 
 type exchangeClient struct {
@@ -63,6 +64,15 @@ func (c *exchangeClient) GetUserInvested(ctx context.Context, in *ExchangeId, op
 	return out, nil
 }
 
+func (c *exchangeClient) GetCoinDetail(ctx context.Context, in *CoinDetail, opts ...grpc.CallOption) (*CoinDetailResponse, error) {
+	out := new(CoinDetailResponse)
+	err := c.cc.Invoke(ctx, "/radhark.radwallet.Exchange/GetCoinDetail", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ExchangeServer is the server API for Exchange service.
 // All implementations must embed UnimplementedExchangeServer
 // for forward compatibility
@@ -70,6 +80,7 @@ type ExchangeServer interface {
 	ListExchanges(context.Context, *empty.Empty) (*ExchangeList, error)
 	GetUserPatrimony(context.Context, *ExchangeId) (*UserPatrimony, error)
 	GetUserInvested(context.Context, *ExchangeId) (*UserInvested, error)
+	GetCoinDetail(context.Context, *CoinDetail) (*CoinDetailResponse, error)
 	mustEmbedUnimplementedExchangeServer()
 }
 
@@ -85,6 +96,9 @@ func (UnimplementedExchangeServer) GetUserPatrimony(context.Context, *ExchangeId
 }
 func (UnimplementedExchangeServer) GetUserInvested(context.Context, *ExchangeId) (*UserInvested, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserInvested not implemented")
+}
+func (UnimplementedExchangeServer) GetCoinDetail(context.Context, *CoinDetail) (*CoinDetailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCoinDetail not implemented")
 }
 func (UnimplementedExchangeServer) mustEmbedUnimplementedExchangeServer() {}
 
@@ -153,6 +167,24 @@ func _Exchange_GetUserInvested_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Exchange_GetCoinDetail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CoinDetail)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExchangeServer).GetCoinDetail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/radhark.radwallet.Exchange/GetCoinDetail",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExchangeServer).GetCoinDetail(ctx, req.(*CoinDetail))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Exchange_ServiceDesc is the grpc.ServiceDesc for Exchange service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -171,6 +203,10 @@ var Exchange_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserInvested",
 			Handler:    _Exchange_GetUserInvested_Handler,
+		},
+		{
+			MethodName: "GetCoinDetail",
+			Handler:    _Exchange_GetCoinDetail_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
